@@ -71,7 +71,7 @@ void __attribute__ ((long_call)) __attribute__((naked)) __attribute__((noreturn)
 	while(1);
 }
 
-
+/*
 void __attribute__ ((long_call)) __attribute__((naked)) __attribute__((noreturn)) initMBK_ARM9 (void) 
 {
 
@@ -96,7 +96,7 @@ void __attribute__ ((long_call)) __attribute__((naked)) __attribute__((noreturn)
 	);
 	while(1);
 }
-
+*/
 
 /*-------------------------------------------------------------------------
 startBinary_ARM9
