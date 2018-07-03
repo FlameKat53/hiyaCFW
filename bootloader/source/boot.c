@@ -77,6 +77,13 @@ extern unsigned long argSize;
 extern unsigned long dsiSD;
 extern unsigned long dsiMode;
 
+void initMBKArm7() {
+	REG_MBK6=0x00003000;
+	REG_MBK7=0x00403000;
+	REG_MBK8=0x07F837B8;
+	REG_MBK9=0xFF000000;
+}
+
 /*-------------------------------------------------------------------------
 passArgs_ARM7
 Copies the command line arguments to the end of the ARM9 binary, 
@@ -246,6 +253,15 @@ int main (void) {
 	// ARM9 sets up mpu
 	// copy ARM9 function to RAM, and make the ARM9 jump to it
 	memcpy((u32*)TEMP_MEM, (u32*)mpu_reset, mpu_reset_end - mpu_reset);
+	(*(vu32*)0x02FFFE24) = (u32)TEMP_MEM;	// Make ARM9 jump to the function
+	// Wait until the ARM9 has completed its task
+	while ((*(vu32*)0x02FFFE24) == (u32)TEMP_MEM);
+
+	initMBKArm7();
+
+	// ARM9 Inits MBK
+	// copy ARM9 function to RAM, and make the ARM9 jump to it
+	memcpy((u32*)TEMP_MEM, (u32*)initMBK_ARM9, initMBK_ARM9_size);
 	(*(vu32*)0x02FFFE24) = (u32)TEMP_MEM;	// Make ARM9 jump to the function
 	// Wait until the ARM9 has completed its task
 	while ((*(vu32*)0x02FFFE24) == (u32)TEMP_MEM);
