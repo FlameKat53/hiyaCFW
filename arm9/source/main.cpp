@@ -85,12 +85,7 @@ void BootSplashInit() {
 }
 
 void LoadBMP(bool top) {
-	FILE* file;
-	//if (top) {
-		file = fopen("sd:/hiya/splashtop.bmp", "rb");
-	//} else {
-	//	file = fopen("sd:/hiya/splashbottom.bmp", "rb");
-	//}
+	FILE* file = fopen((top ? "sd:/hiya/splashtop.bmp" : "sd:/hiya/splashbottom.bmp"), "rb");
 
 	// Start loading
 	fseek(file, 0xe, SEEK_SET);
@@ -102,11 +97,11 @@ void LoadBMP(bool top) {
 		u16* src = buffer;
 		for (int i=0; i<256; i++) {
 			u16 val = *(src++);
-			//if (top) {
-				BG_GFX[0x20000+y*256+i] = ((val>>10)&0x1f) | ((val)&(0x1f<<5)) | (val&0x1f)<<10 | BIT(15);
-			//} else {
-			//	BG_GFX[y*256+i] = ((val>>10)&0x1f) | ((val)&(0x1f<<5)) | (val&0x1f)<<10 | BIT(15);
-			//}
+			if (top) {
+				BG_GFX[y*256+i] = ((val>>10)&0x1f) | ((val)&(0x1f<<5)) | (val&0x1f)<<10 | BIT(15);
+			} else {
+				BG_GFX_SUB[y*256+i] = ((val>>10)&0x1f) | ((val)&(0x1f<<5)) | (val&0x1f)<<10 | BIT(15);
+			}
 		}
 	}
 
@@ -131,7 +126,7 @@ void LoadScreen() {
 			// Set up background
 			videoSetMode(MODE_3_2D | DISPLAY_BG3_ACTIVE);
 			vramSetBankD(VRAM_D_MAIN_BG_0x06040000);
-			REG_BG3CNT = BG_MAP_BASE(16) | BG_BMP16_256x256;
+			REG_BG3CNT = BG_MAP_BASE(0) | BG_BMP16_256x256;
 			REG_BG3X = 0;
 			REG_BG3Y = 0;
 			REG_BG3PA = 1<<8;
@@ -141,20 +136,20 @@ void LoadScreen() {
 
 			LoadBMP(true);
 		}
-		/*if (bottomSplashFound) {
+		if (bottomSplashFound) {
 			// Set up background
-			videoSetModeSub(MODE_2_2D | DISPLAY_BG2_ACTIVE);
+			videoSetModeSub(MODE_3_2D | DISPLAY_BG3_ACTIVE);
 			vramSetBankC (VRAM_C_SUB_BG_0x06200000);
-			REG_BG2CNT = BG_MAP_BASE(0) | BG_BMP16_256x256;
-			REG_BG2X = 0;
-			REG_BG2Y = 0;
-			REG_BG2PA = 1<<8;
-			REG_BG2PB = 0;
-			REG_BG2PC = 0;
-			REG_BG2PD = 1<<8;
+			REG_BG3CNT_SUB = BG_MAP_BASE(0) | BG_BMP16_256x256;
+			REG_BG3X_SUB = 0;
+			REG_BG3Y_SUB = 0;
+			REG_BG3PA_SUB = 1<<8;
+			REG_BG3PB_SUB = 0;
+			REG_BG3PC_SUB = 0;
+			REG_BG3PD_SUB = 1<<8;
 
 			LoadBMP(false);
-		}*/
+		}
 	} else {
 		// Display Load Screen
 		swiDecompressLZSSVram ((void*)topLoadTiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
@@ -222,7 +217,7 @@ int main( int argc, char **argv) {
 					consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 15, 0, true, true);
 					consoleClear();
 
-					printf("HiyaCFW v1.3.2 configuration\n");
+					printf("HiyaCFW v1.3.3 configuration\n");
 					printf("Press A to select, START to save");
 					printf("\n");
 
@@ -351,7 +346,7 @@ int main( int argc, char **argv) {
 		if (splash) {
 
 			if (access("sd:/hiya/splashtop.bmp", F_OK)) topSplashFound = false;
-			//if (access("sd:/hiya/splashbottom.bmp", F_OK)) bottomSplashFound = false;
+			if (access("sd:/hiya/splashbottom.bmp", F_OK)) bottomSplashFound = false;
 
 			BootSplashInit();
 
