@@ -49,7 +49,7 @@ bool dsiSplash = false;
 bool titleAutoboot = false;
 
 bool topSplashFound = true;
-bool bottomSplashFound = false;
+bool bottomSplashFound = true;
 
 void vramcpy_ui (void* dest, const void* src, int size) 
 {
@@ -98,9 +98,9 @@ void LoadBMP(bool top) {
 		for (int i=0; i<256; i++) {
 			u16 val = *(src++);
 			if (top) {
-				BG_GFX[y*256+i] = ((val>>10)&0x1f) | ((val)&(0x1f<<5)) | (val&0x1f)<<10 | BIT(15);
+				BG_GFX[0x20000+y*256+i] = ((val>>10)&0x1f) | ((val)&(0x1f<<5)) | (val&0x1f)<<10 | BIT(15);
 			} else {
-				BG_GFX_SUB[y*256+i] = ((val>>10)&0x1f) | ((val)&(0x1f<<5)) | (val&0x1f)<<10 | BIT(15);
+				BG_GFX_SUB[0x20000+y*256+i] = ((val>>10)&0x1f) | ((val)&(0x1f<<5)) | (val&0x1f)<<10 | BIT(15);
 			}
 		}
 	}
@@ -110,13 +110,6 @@ void LoadBMP(bool top) {
 
 void LoadScreen() {
 	if (topSplashFound || bottomSplashFound) {
-		// Make screens black before loading image(s)
-		if(!gotoSettings) {
-			videoSetMode(MODE_0_2D);
-			vramSetBankG(VRAM_G_MAIN_BG);
-			videoSetModeSub(MODE_0_2D);
-			vramSetBankH(VRAM_H_SUB_BG);
-		}
 		consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 15, 0, true, true);
 		consoleClear();
 		consoleInit(NULL, 1, BgType_Text4bpp, BgSize_T_256x256, 15, 0, false, true);
@@ -126,7 +119,7 @@ void LoadScreen() {
 			// Set up background
 			videoSetMode(MODE_3_2D | DISPLAY_BG3_ACTIVE);
 			vramSetBankD(VRAM_D_MAIN_BG_0x06040000);
-			REG_BG3CNT = BG_MAP_BASE(0) | BG_BMP16_256x256;
+			REG_BG3CNT = BG_MAP_BASE(16) | BG_BMP16_256x256;
 			REG_BG3X = 0;
 			REG_BG3Y = 0;
 			REG_BG3PA = 1<<8;
@@ -140,7 +133,7 @@ void LoadScreen() {
 			// Set up background
 			videoSetModeSub(MODE_3_2D | DISPLAY_BG3_ACTIVE);
 			vramSetBankC (VRAM_C_SUB_BG_0x06200000);
-			REG_BG3CNT_SUB = BG_MAP_BASE(0) | BG_BMP16_256x256;
+			REG_BG3CNT_SUB = BG_MAP_BASE(16) | BG_BMP16_256x256;
 			REG_BG3X_SUB = 0;
 			REG_BG3Y_SUB = 0;
 			REG_BG3PA_SUB = 1<<8;
