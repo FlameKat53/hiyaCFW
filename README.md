@@ -31,11 +31,11 @@ In order to compile this on your own, you will need [devkitPro](https://devkitpr
  $ dkp-pacman -Syu devkitARM general-tools dstools ndstool libnds libfat-nds
 ```
 
-Once everything is downloaded and installed, `git clone` this repository, navigate to the folder, and run `make` to compile nds-bootstrap. If there is an error, let us know.
+Once everything is downloaded and installed, `git clone` this repository, navigate to the folder, and run `make` to compile HiyaCFW. If there is an error, let us know.
 
 # Rocket.Chat Server
 
-Would you like a place to talk about your experiences with nds-bootstrap? Do you need some assistance? Well, why not join our Rocket.Chat server!
+Would you like a place to talk about your experiences with HiyaCFW? Do you need some assistance? Well, why not join our Rocket.Chat server!
 
 Rocket.Chat is a self-hosted communication platform with the ability to share files and switch to an video/audio conferencing.
 
