@@ -42,7 +42,11 @@
 
 #define TMD_SIZE        0x208
 
+static int blCursorPosition = 0, blScreenPosition = 0;
+static bool blTextPrinted = false;
+
 bool gotoSettings = false;
+bool gotoBootloader = false;
 
 bool splash = true;
 bool dsiSplash = false;
@@ -183,6 +187,112 @@ void setupConsole() {
 	vramSetBankH(VRAM_H_SUB_BG);
 }
 
+void getDirectoryContents (vector<DirEntry>& dirContents) {
+	struct stat st;
+
+	dirContents.clear();
+
+	DIR *pdir = opendir ("sd:/hiya/payloads/"); 
+	
+	if (pdir == NULL) {
+		printf ("Unable to open the directory.\n");
+	} else {
+
+		while(true) {
+			DirEntry dirEntry;
+
+			struct dirent* pent = readdir(pdir);
+			if(pent == NULL) break;
+
+			stat(pent->d_name, &st);
+			if (strcmp(pent->d_name, "..") != 0) {
+				dirEntry.name = pent->d_name;
+				dirEntry.isDirectory = (st.st_mode & S_IFDIR) ? true : false;
+				if (!dirEntry.isDirectory) {
+					dirEntry.size = getFileSize(dirEntry.name.c_str());
+				}
+
+				if (dirEntry.name.compare(".") != 0 && (dirEntry.isDirectory || nameEndsWith(dirEntry.name))) {
+					dirContents.push_back (dirEntry);
+				}
+			}
+
+		}
+		
+		closedir(pdir);
+	}	
+	
+	sort(dirContents.begin(), dirContents.end(), dirEntryPredicate);
+
+}
+
+void bl_drawTopScreen(std::vector<DirEntry> itemsAA, int startRow) {
+	//printf ("\x1b[43m"); //yellow
+	printf ("\x1b[0;0H");
+	printf ("HiyaCFW chainloader\nPress A to select, START to quit");
+
+	// Move to 5th row
+	printf ("\x1b[4;0H");
+
+	for (int i = 0; i < ((int)blItems.size() - startRow) && i < ENTRIES_PER_SCREEN; i++) {
+		iprintf ("\x1b[%d;0H", i + ENTRIES_START_ROW);
+		if (blCursorPosition == i + startRow) {
+			printf("> ");
+		} else {
+			printf("  ");
+		}
+		printf((itemsAA[i + startRow].name.substr(0, SCREEN_COLS)).c_str());
+	}
+}
+
+void blBootLoader(std::vector<DirEntry> ndsFiles) {
+std::vector<DirEntry> itemsAA = bootableFiles;
+int pressed = 0;
+screenPosition = 0, cursorPosition = 0;
+
+	while (true) {
+		if (!blTextPrinted) {
+			// Scroll screen if needed
+			if (blCursorPosition < blScreenPosition) {
+				blScreenPosition = blCursorPosition;
+			} else if (blCursorPosition > blScreenPosition + ENTRIES_PER_SCREEN - 1) {
+				blScreenPosition = blCursorPosition - ENTRIES_PER_SCREEN + 1;
+			}
+
+			setupConsole();
+			consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 15, 0, true, true);
+			bl_drawTopScreen(itemsAA, screenPosition);
+
+			blTextPrinted = true;
+		}
+			setupConsole();
+		do {
+			scanKeys();
+			pressed = keysDownRepeat();
+			swiWaitForVBlank();
+
+			if (isDSiMode()) {
+				if (REG_SCFG_MC != stored_SCFG_MC) {
+					blTextPrinted = false;
+					break;
+				}
+			}
+		} while (!(pressed & KEY_UP) && !(pressed & KEY_DOWN) && !(pressed & KEY_A));
+
+		if ((pressed & KEY_UP) && blCursorPosition > 0) {
+			blCursorPosition--;
+			blTextPrinted = false;
+		} else if ((pressed & KEY_DOWN) && blCursorPosition < (int)itemsAA.size()-1) {
+			blCursorPosition++;
+			blTextPrinted = false;
+		}
+
+				if (pressed & KEY_A) {
+					blTextPrinted = false;
+					runNdsFile(itemsAA[blCursorPosition].fullPath.c_str(), 0, NULL, false);
+				}
+		}
+
 int main( int argc, char **argv) {
 
 	// defaultExceptionHandler();
@@ -198,6 +308,7 @@ int main( int argc, char **argv) {
 		scanKeys();
 
 		if(keysHeld() & KEY_SELECT) gotoSettings = true;
+		if(keysHeld() & KEY_START) gotoBootloader = true;
 
 		if(gotoSettings) {
 			setupConsole();
@@ -307,9 +418,13 @@ int main( int argc, char **argv) {
 			}
 		}
 
-		if (!gotoSettings && (*(u32*)0x02000300 == 0x434E4C54)) {
+		if (!gotoSettings && !gotoBootloader && (*(u32*)0x02000300 == 0x434E4C54)) {
 			// if "CNLT" is found, then don't show splash
 			splash = false;
+		}
+
+		if (gotoBootloader) {
+		blBootLoader();
 		}
 
 		if ((*(u32*)0x02000300 == 0x434E4C54) && (*(u32*)0x02000310 != 0x00000000)) {
