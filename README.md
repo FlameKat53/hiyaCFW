@@ -6,9 +6,9 @@
     </a>
   </span>
   <span style="padding-left: 5px;">
-    <a href="https://dshomebrew.serveo.net/">
-      <img src="https://github.com/ahezard/nds-bootstrap/blob/master/images/Rocket.Chat button.png" height="20">
-    </a>
+  <a href="https://discord.gg/yqSut8c">
+   <img src="https://img.shields.io/badge/Discord%20Server-%23hiyacfw-green.svg">
+  </a>
   </span>
 </p>
 
@@ -32,14 +32,6 @@ In order to compile this on your own, you will need [devkitPro](https://devkitpr
 ```
 
 Once everything is downloaded and installed, `git clone` this repository, navigate to the folder, and run `make` to compile HiyaCFW. If there is an error, let us know.
-
-# Rocket.Chat Server
-
-Would you like a place to talk about your experiences with HiyaCFW? Do you need some assistance? Well, why not join our Rocket.Chat server!
-
-Rocket.Chat is a self-hosted communication platform with the ability to share files and switch to an video/audio conferencing.
-
-Come join today by following this link: https://dshomebrew.serveo.net/ ([alternative link](https://b2b38a00.ngrok.io))
 
 # Credits
 - Apache Thunder, NoCash, StuckPixel, Shutterbug2000, and Gericom.
