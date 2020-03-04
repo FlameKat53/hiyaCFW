@@ -48,17 +48,14 @@ Helpful information:
 #include <nds/arm7/audio.h>
 #include <string.h>
 
+#include "sdmmc.h"
 #include "fat.h"
-#include "dldi_patcher.h"
 #include "card.h"
 #include "boot.h"
 
 void mpu_reset();
 void mpu_reset_end();
 void arm7clearRAM();
-int sdmmc_sdcard_readsectors(u32 sector_no, u32 numsectors, void *out);
-int sdmmc_sdcard_init();
-void sdmmc_controller_init();
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Important things
@@ -258,18 +255,14 @@ int main (void) {
 	// Load the NDS file
 	loadBinary_ARM7(fileCluster);
 
-#ifndef NO_DLDI
-	// Patch with DLDI if desired
-	if (wantToPatchDLDI) {
-		dldiPatchBinary ((u8*)((u32*)NDS_HEAD)[0x0A], ((u32*)NDS_HEAD)[0x0B]);
-	}
-#endif
-
 	// Pass command line arguments to loaded program
 	passArgs_ARM7();
 	
 	// Reset SDMC. Required to get bootloader to init things correctly.
 	sdmmc_controller_init();
+	*(vu16*)(SDMMC_BASE + REG_SDDATACTL32) &= 0xFFFDu;
+	*(vu16*)(SDMMC_BASE + REG_SDDATACTL) &= 0xFFDDu;
+	*(vu16*)(SDMMC_BASE + REG_SDBLKLEN32) = 0;
 
 	startBinary_ARM7();
 
