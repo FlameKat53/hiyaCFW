@@ -84,25 +84,30 @@ void BootSplashInit() {
 
 }
 
+static u16 bmpImageBuffer[0x18000/2];
+static u16 outputImageBuffer[2][0x18000/2];
+
 void LoadBMP(bool top) {
 	FILE* file = fopen((top ? "sd:/hiya/splashtop.bmp" : "sd:/hiya/splashbottom.bmp"), "rb");
+
+	if (!file) return;
 
 	// Start loading
 	fseek(file, 0xe, SEEK_SET);
 	u8 pixelStart = (u8)fgetc(file) + 0xe;
 	fseek(file, pixelStart, SEEK_SET);
-	for (int y=191; y>=0; y--) {
-		u16 buffer[256];
-		fread(buffer, 2, 0x100, file);
-		u16* src = buffer;
-		for (int i=0; i<256; i++) {
-			u16 val = *(src++);
-			if (top) {
-				BG_GFX[0x20000+y*256+i] = ((val>>10)&0x1f) | ((val)&(0x1f<<5)) | (val&0x1f)<<10 | BIT(15);
-			} else {
-				BG_GFX_SUB[0x20000+y*256+i] = ((val>>10)&0x1f) | ((val)&(0x1f<<5)) | (val&0x1f)<<10 | BIT(15);
-			}
+	fread(bmpImageBuffer, 1, 0x18000, file);
+	u16* src = bmpImageBuffer;
+	int x = 0;
+	int y = 191;
+	for (int i=0; i<256*192; i++) {
+		if (x >= 256) {
+			x = 0;
+			y--;
 		}
+		u16 val = *(src++);
+		outputImageBuffer[top][y*256+x] = ((val>>10)&0x1f) | ((val)&(0x1f<<5)) | (val&0x1f)<<10 | BIT(15);
+		x++;
 	}
 
 	fclose(file);
@@ -115,11 +120,14 @@ void LoadScreen() {
 		consoleInit(NULL, 1, BgType_Text4bpp, BgSize_T_256x256, 15, 0, false, true);
 		consoleClear();
 
+		LoadBMP(true);
+		LoadBMP(false);
+
 		if (topSplashFound) {
 			// Set up background
 			videoSetMode(MODE_3_2D | DISPLAY_BG3_ACTIVE);
 			vramSetBankD(VRAM_D_MAIN_BG_0x06040000);
-			REG_BG3CNT = BG_MAP_BASE(16) | BG_BMP16_256x256;
+			REG_BG3CNT = BG_MAP_BASE(0) | BG_BMP16_256x256;
 			REG_BG3X = 0;
 			REG_BG3Y = 0;
 			REG_BG3PA = 1<<8;
@@ -127,13 +135,13 @@ void LoadScreen() {
 			REG_BG3PC = 0;
 			REG_BG3PD = 1<<8;
 
-			LoadBMP(true);
+			dmaCopyWordsAsynch(0, outputImageBuffer[1], BG_GFX, 0x18000);
 		}
 		if (bottomSplashFound) {
 			// Set up background
 			videoSetModeSub(MODE_3_2D | DISPLAY_BG3_ACTIVE);
 			vramSetBankC (VRAM_C_SUB_BG_0x06200000);
-			REG_BG3CNT_SUB = BG_MAP_BASE(16) | BG_BMP16_256x256;
+			REG_BG3CNT_SUB = BG_MAP_BASE(0) | BG_BMP16_256x256;
 			REG_BG3X_SUB = 0;
 			REG_BG3Y_SUB = 0;
 			REG_BG3PA_SUB = 1<<8;
@@ -141,7 +149,7 @@ void LoadScreen() {
 			REG_BG3PC_SUB = 0;
 			REG_BG3PD_SUB = 1<<8;
 
-			LoadBMP(false);
+			dmaCopyWordsAsynch(1, outputImageBuffer[0], BG_GFX_SUB, 0x18000);
 		}
 	} else {
 		// Display Load Screen
