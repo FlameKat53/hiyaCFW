@@ -123,6 +123,7 @@ $(TARGET).nds:	$(TARGET).arm7 $(TARGET).arm9
 	ndstool	-c $(TARGET).nds -7 $(TARGET).arm7.elf -9 $(TARGET).arm9.elf -r9 00080002 \
 			-b $(CURDIR)/icon.bmp "hiyaCFW;CFW for Nintendo DSi;made by Apache Thunder" \
 			-g HIYA 01 "HIYACFW" -z 80040000 -u 00030004
+	python27 fix_ndsheader.py $(TARGET).nds
 	cp $(TARGET).nds hiya.dsi
 
 $(TARGET).arm7: arm7/$(TARGET).elf
