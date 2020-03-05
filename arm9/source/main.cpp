@@ -176,9 +176,11 @@ void setupConsole() {
 }
 
 void setupSdNand(void) {
-	consoleDemoInit();
 	fatMountSimple("nand", &io_dsi_nand);
 
+	if (access("nand:/", F_OK) != 0) return;
+
+	consoleDemoInit();
 	printf("Setting up SDNAND.\n");
 	printf("Do not turn off the power.\n");
 
