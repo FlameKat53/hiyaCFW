@@ -12,7 +12,6 @@
 
 #include "inifile.h"
 #include "fileOperations.h"
-#include "nandio.h"
 
 #include "topLoad.h"
 #include "subLoad.h"
@@ -175,46 +174,11 @@ void setupConsole() {
 	vramSetBankH(VRAM_H_SUB_BG);
 }
 
-void setupSdNand(void) {
-	fatMountSimple("nand", &io_dsi_nand);
-
-	if (access("nand:/", F_OK) != 0) return;
-
-	consoleDemoInit();
-	printf("Setting up SDNAND.\n");
-	printf("Do not turn off the power.\n");
-
-	// Copy NAND files to SD card
-	fcopy("nand:/import", "sd:/import");
-	fcopy("nand:/private", "sd:/private");
-	fcopy("nand:/progress", "sd:/progress");
-	fcopy("nand:/shared1", "sd:/shared1");
-	fcopy("nand:/shared2", "sd:/shared2");
-	fcopy("nand:/sys", "sd:/sys");
-	fcopy("nand:/ticket", "sd:/ticket");
-	fcopy("nand:/title", "sd:/title");
-	fcopy("nand:/tmp", "sd:/tmp");
-}
-
 int main( int argc, char **argv) {
 
 	// defaultExceptionHandler();
 
 	if (fatInitDefault()) {
-
-		if (
-			(access("sd:/import", F_OK) != 0)
-		// && (access("sd:/private", F_OK) != 0)
-		 && (access("sd:/progress", F_OK) != 0)
-		 && (access("sd:/shared1", F_OK) != 0)
-		 && (access("sd:/shared2", F_OK) != 0)
-		 && (access("sd:/sys", F_OK) != 0)
-		 && (access("sd:/ticket", F_OK) != 0)
-		 && (access("sd:/title", F_OK) != 0)
-		 && (access("sd:/tmp", F_OK) != 0)
-		) {
-			setupSdNand();
-		}
 
 		LoadSettings();
 	

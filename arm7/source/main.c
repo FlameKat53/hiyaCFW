@@ -54,15 +54,7 @@ int main(void) {
 
 	irqEnable( IRQ_VBLANK | IRQ_VCOUNT | IRQ_NETWORK );
 
-	for (int i = 0; i < 8; i++) {
-		*(u8*)(0x2FFFD00+i) = *(u8*)(0x4004D07-i);	// Get ConsoleID
-	}
-
 	while (1) {
-		if (*(u32*)(0x2FFFD0C) == 0x454D4D43) {
-			sdmmc_nand_cid((u32*)0x2FFD7BC);	// Get eMMC CID
-			*(u32*)(0x2FFFD0C) = 0;
-		}
 		fifocheck();
 		swiWaitForVBlank();
 	}
