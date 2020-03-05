@@ -345,7 +345,9 @@ int main( int argc, char **argv) {
 		char tmdpath[256];
 		for (u8 i = 0x41; i <= 0x5A; i++) {
 			snprintf (tmdpath, sizeof(tmdpath), "sd:/title/00030017/484e41%x/content/title.tmd", i);
-			if (access(tmdpath, F_OK)) {} else { break; }
+			if (access(tmdpath, F_OK) == 0) {
+				break;
+			}
 		}
 		FILE* f_tmd = fopen(tmdpath, "rb");
 		if (f_tmd) {
@@ -373,8 +375,9 @@ int main( int argc, char **argv) {
 			consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 15, 0, true, true);
 			consoleClear();
 			printf("Error!\n");
-			printf("Failed to read Launcher's\n");
-			printf("title.tmd\n");
+			printf("\n");
+			printf("Launcher's title.tmd is\n");
+			printf("not found!\n");
 			consoleInit(NULL, 1, BgType_Text4bpp, BgSize_T_256x256, 15, 0, false, true);
 			consoleClear();
 		}
