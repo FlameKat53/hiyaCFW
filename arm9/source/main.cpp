@@ -1,23 +1,3 @@
-/*-----------------------------------------------------------------
-
- Copyright (C) 2010  Dave "WinterMute" Murphy
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
-------------------------------------------------------------------*/
-
 #include <nds.h>
 #include <fat.h>
 #include <limits.h>
@@ -31,6 +11,8 @@
 #include "bios_decompress_callback.h"
 
 #include "inifile.h"
+#include "fileOperations.h"
+#include "nandio.h"
 
 #include "topLoad.h"
 #include "subLoad.h"
@@ -43,6 +25,8 @@
 #define TMD_SIZE        0x208
 
 bool gotoSettings = false;
+
+static char tmdBuffer[TMD_SIZE];
 
 bool splash = true;
 bool dsiSplash = false;
@@ -191,11 +175,44 @@ void setupConsole() {
 	vramSetBankH(VRAM_H_SUB_BG);
 }
 
+void setupSdNand(void) {
+	consoleDemoInit();
+	fatMountSimple("nand", &io_dsi_nand);
+
+	printf("Setting up SDNAND.\n");
+	printf("Do not turn off the power.\n");
+
+	// Copy NAND files to SD card
+	fcopy("nand:/import", "sd:/import");
+	fcopy("nand:/private", "sd:/private");
+	fcopy("nand:/progress", "sd:/progress");
+	fcopy("nand:/shared1", "sd:/shared1");
+	fcopy("nand:/shared2", "sd:/shared2");
+	fcopy("nand:/sys", "sd:/sys");
+	fcopy("nand:/ticket", "sd:/ticket");
+	fcopy("nand:/title", "sd:/title");
+	fcopy("nand:/tmp", "sd:/tmp");
+}
+
 int main( int argc, char **argv) {
 
 	// defaultExceptionHandler();
 
 	if (fatInitDefault()) {
+
+		if (
+			(access("sd:/import", F_OK) != 0)
+		// && (access("sd:/private", F_OK) != 0)
+		 && (access("sd:/progress", F_OK) != 0)
+		 && (access("sd:/shared1", F_OK) != 0)
+		 && (access("sd:/shared2", F_OK) != 0)
+		 && (access("sd:/sys", F_OK) != 0)
+		 && (access("sd:/ticket", F_OK) != 0)
+		 && (access("sd:/title", F_OK) != 0)
+		 && (access("sd:/tmp", F_OK) != 0)
+		) {
+			setupSdNand();
+		}
 
 		LoadSettings();
 	
@@ -365,33 +382,26 @@ int main( int argc, char **argv) {
 			if (access(tmdpath, F_OK)) {} else { break; }
 		}
 		FILE* f_tmd = fopen(tmdpath, "rb");
-		off_t fsize = 0;
 		if (f_tmd) {
-			fseek(f_tmd, 0, SEEK_END);
-			fsize = ftell(f_tmd);
-			if (fsize && (fsize <= TMD_SIZE)) {
-				int err = runNdsFile("/hiya/BOOTLOADER.NDS", 0, NULL);
-				setupConsole();
-				consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 15, 0, true, true);
-				consoleClear();
-				iprintf ("Start failed. Error %i\n", err);
-				if (err == 1) printf ("bootloader.nds not found!");
-				consoleInit(NULL, 1, BgType_Text4bpp, BgSize_T_256x256, 15, 0, false, true);
-				consoleClear();
-			} else {
-				fsize = 0;
-				setupConsole();
-				consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 15, 0, true, true);
-				consoleClear();
-				printf("Error!\n");
-				printf("Launcher's .tmd is too big.\n");
-				printf("\n");
-				printf("Please replace it with a clean\n");
-				printf("one.\n");
-				consoleInit(NULL, 1, BgType_Text4bpp, BgSize_T_256x256, 15, 0, false, true);
-				consoleClear();
+			if (getFileSize(tmdpath) > TMD_SIZE) {
+				// Read big .tmd file at the correct size
+				f_tmd = fopen(tmdpath, "rb");
+				fread(tmdBuffer, 1, TMD_SIZE, f_tmd);
+				fclose(f_tmd);
+
+				// Write correct sized .tmd file
+				f_tmd = fopen(tmdpath, "wb");
+				fwrite(tmdBuffer, 1, TMD_SIZE, f_tmd);
+				fclose(f_tmd);
 			}
-			fclose(f_tmd);
+			int err = runNdsFile("sd:/hiya/BOOTLOADER.NDS", 0, NULL);
+			setupConsole();
+			consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 15, 0, true, true);
+			consoleClear();
+			iprintf ("Start failed. Error %i\n", err);
+			if (err == 1) printf ("bootloader.nds not found!");
+			consoleInit(NULL, 1, BgType_Text4bpp, BgSize_T_256x256, 15, 0, false, true);
+			consoleClear();
 		} else {
 			setupConsole();
 			consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 15, 0, true, true);

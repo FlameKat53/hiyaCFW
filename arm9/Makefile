@@ -17,7 +17,7 @@ include $(DEVKITARM)/ds_rules
 TARGET		:=	hiyaCFW
 IMAGES		:=  graphics
 BUILD		:=	build
-SOURCES		:=	source $(IMG_DATA)
+SOURCES		:=	source $(IMG_DATA) mbedtls
 INCLUDES	:=	include
 DATA		:=	../data
 
