@@ -199,9 +199,7 @@ int main( int argc, char **argv) {
 
 		LoadSettings();
 	
-		if (access("sd:/hiya/settings.ini", F_OK)) {
-			gotoSettings = true;
-		}
+		gotoSettings = (access("sd:/hiya/settings.ini", F_OK) != 0);
 	
 		scanKeys();
 
@@ -218,50 +216,55 @@ int main( int argc, char **argv) {
 					consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 15, 0, true, true);
 					consoleClear();
 
+					printf ("\x1B[46m");
+
 					printf("HiyaCFW v1.3.3 configuration\n");
 					printf("Press A to select, START to save");
 					printf("\n");
 
-					if(cursorPosition == 0) printf(">");
-					else printf(" ");
+					printf ("\x1B[47m");
 
-					printf("Splash: ");
+					if(cursorPosition == 0) printf ("\x1B[41m");
+					else printf ("\x1B[47m");
+
+					printf(" Splash: ");
 					if(splash)
 						printf("Off( ), On(x)");
 					else
 						printf("Off(x), On( )");
 					printf("\n\n");
 					
-					if(cursorPosition == 1) printf(">");
-					else printf(" ");
+					if(cursorPosition == 1) printf ("\x1B[41m");
+					else printf ("\x1B[47m");
 
 					if(dsiSplash)
-						printf("(x)");
+						printf(" (x)");
 					else
-						printf("( )");
+						printf(" ( )");
 					printf(" DSi Splash/H&S screen\n");
 
-					if(cursorPosition == 2) printf(">");
-					else printf(" ");
+					if(cursorPosition == 2) printf ("\x1B[41m");
+					else printf ("\x1B[47m");
 
 					if(titleAutoboot)
-						printf("(x)");
+						printf(" (x)");
 					else
-						printf("( )");
+						printf(" ( )");
 					printf(" Autoboot title\n");
 
 					consoleInit(NULL, 1, BgType_Text4bpp, BgSize_T_256x256, 15, 0, false, true);
 					consoleClear();
 
+					printf("\n");
 					if(cursorPosition == 0) {
-						printf("Enable splash screen.");
+						printf(" Enable splash screen.");
 					} else if(cursorPosition == 1) {
-						printf("Enable showing the DSi Splash/\n");
-						printf("Health & Safety screen.");
+						printf(" Enable showing the DSi Splash/\n");
+						printf(" Health & Safety screen.");
 					} else if(cursorPosition == 2) {
-						printf("Load title contained in\n");
-						printf("sd:/hiya/autoboot.bin\n");
-						printf("instead of the DSi Menu.");
+						printf(" Load title contained in\n");
+						printf(" sd:/hiya/autoboot.bin\n");
+						printf(" instead of the DSi Menu.");
 					}
 
 					menuprinted = false;
