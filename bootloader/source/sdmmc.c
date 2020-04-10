@@ -246,7 +246,7 @@ static u32 calcSDSize(u8* csd, int type) {
 }
 
 //---------------------------------------------------------------------------------
-void sdmmc_controller_init(bool force) {
+void sdmmc_controller_init() {
 //---------------------------------------------------------------------------------
     deviceSD.isSDHC = 0;
     deviceSD.SDOPT = 0;
