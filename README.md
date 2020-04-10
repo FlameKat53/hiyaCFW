@@ -7,7 +7,7 @@
   </span>
   <span style="padding-left: 5px;">
   <a href="https://discord.gg/yD3spjv">
-   <img src="https://img.shields.io/badge/Discord%20Server-%23other%2Dhomebrew-green.svg">
+   <img src="https://img.shields.io/badge/Discord%20Server-%23other--homebrew-green.svg">
   </a>
   </span>
 </p>
